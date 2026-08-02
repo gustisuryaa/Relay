@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { z } from 'zod';
-import { authOptions } from '@/lib/auth';
+import { getSessionUserId } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 
 const createWorkspaceSchema = z.object({
@@ -17,8 +16,8 @@ function slugify(name: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const userId = await getSessionUserId();
+  if (!userId) {
     return NextResponse.json({ error: 'UNAUTHENTICATED' }, { status: 401 });
   }
 
@@ -37,7 +36,7 @@ export async function POST(req: NextRequest) {
     data: {
       name: parsed.data.name,
       slug,
-      members: { create: { userId: session.user.id, role: 'OWNER' } },
+      members: { create: { userId, role: 'OWNER' } },
     },
   });
 
@@ -45,13 +44,13 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const userId = await getSessionUserId();
+  if (!userId) {
     return NextResponse.json({ error: 'UNAUTHENTICATED' }, { status: 401 });
   }
 
   const workspaces = await prisma.workspace.findMany({
-    where: { members: { some: { userId: session.user.id } } },
+    where: { members: { some: { userId } } },
     include: { boards: { select: { id: true, name: true } } },
   });
 

@@ -1,14 +1,13 @@
 'use server';
 
 import { z } from 'zod';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getSessionUserId } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 
 async function requireUserId() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) throw new Error('UNAUTHENTICATED');
-  return session.user.id;
+  const userId = await getSessionUserId();
+  if (!userId) throw new Error('UNAUTHENTICATED');
+  return userId;
 }
 
 /**

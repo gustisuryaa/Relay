@@ -1,8 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getSessionUserId } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { pusherServer, boardChannel, BoardEvents } from '@/lib/pusher';
 import { summarizeTask } from '@/lib/ai';
@@ -21,8 +20,8 @@ const createTaskSchema = z.object({
  * the client is a suggestion, the server is the boundary.
  */
 async function requireBoardAccess(boardId: string) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) throw new Error('UNAUTHENTICATED');
+  const userId = await getSessionUserId();
+  if (!userId) throw new Error('UNAUTHENTICATED');
 
   const board = await prisma.board.findUnique({
     where: { id: boardId },
@@ -30,10 +29,10 @@ async function requireBoardAccess(boardId: string) {
   });
   if (!board) throw new Error('BOARD_NOT_FOUND');
 
-  const isMember = board.workspace.members.some((m: { userId: string }) => m.userId === session.user.id);
+  const isMember = board.workspace.members.some((m: { userId: string }) => m.userId === userId);
   if (!isMember) throw new Error('FORBIDDEN');
 
-  return { userId: session.user.id, board };
+  return { userId, board };
 }
 
 export async function createTask(input: z.infer<typeof createTaskSchema>) {
