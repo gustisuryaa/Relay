@@ -1,0 +1,122 @@
+// Relay data model
+// Hierarchy: User -> WorkspaceMember -> Workspace -> Board -> Column -> Task -> Comment
+// Design notes:
+// - WorkspaceMember is a join table WITH a role, not a plain many-to-many,
+//   because permissions (OWNER/ADMIN/MEMBER) are a first-class requirement.
+// - Task.position is a float (not int) so reordering within a column via
+//   drag-and-drop never requires re-indexing every sibling row — we just
+//   insert the new item at (prev + next) / 2. Classic "lexicographic/gap"
+//   ordering trick for drag-and-drop lists.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  hashedPassword String?
+  image         String?
+  createdAt     DateTime  @default(now())
+
+  memberships   WorkspaceMember[]
+  assignedTasks Task[]           @relation("TaskAssignee")
+  createdTasks  Task[]           @relation("TaskCreator")
+  comments      Comment[]
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  members WorkspaceMember[]
+  boards  Board[]
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  role        WorkspaceRole @default(MEMBER)
+  userId      String
+  workspaceId String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+
+  @@unique([userId, workspaceId])
+}
+
+model Board {
+  id          String   @id @default(cuid())
+  name        String
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  columns     Column[]
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+}
+
+model Column {
+  id       String @id @default(cuid())
+  name     String
+  position Float
+  boardId  String
+  board    Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks    Task[]
+
+  @@index([boardId])
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  aiSummary   String?      // cached AI-generated summary, regenerated on demand
+  priority    TaskPriority @default(MEDIUM)
+  position    Float
+  columnId    String
+  column      Column       @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  assigneeId  String?
+  assignee    User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creatorId   String
+  creator     User         @relation("TaskCreator", fields: [creatorId], references: [id])
+  comments    Comment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([columnId])
+  @@index([assigneeId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+}

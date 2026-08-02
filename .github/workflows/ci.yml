@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Dummy values so `next build` can statically analyze routes that
+          # reference these at module scope — no real DB/API calls happen
+          # during a production build, only during runtime requests.
+          DATABASE_URL: 'postgresql://relay:relay@localhost:5432/relay'
+          NEXTAUTH_SECRET: 'ci-build-placeholder'
+          NEXTAUTH_URL: 'http://localhost:3000'
+          NEXT_PUBLIC_PUSHER_KEY: 'ci-placeholder'
+          NEXT_PUBLIC_PUSHER_CLUSTER: 'ap1'
