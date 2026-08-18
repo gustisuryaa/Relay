@@ -85,7 +85,7 @@ cp .env.example .env
 ```
 Fill in:
 - `NEXTAUTH_SECRET` — generate with `openssl rand -base64 32`
-- `GITHUB_ID` / `GITHUB_SECRET` — from a [GitHub OAuth App](https://github.com/settings/developers) (callback URL: `http://localhost:3000/api/auth/callback/github`)
+- `GITHUB_ID` / `GITHUB_SECRET` from a [GitHub OAuth App](https://github.com/settings/developers) (callback URL: `http://localhost:3000/api/auth/callback/github`)
 - `PUSHER_*` — free tier at [pusher.com](https://pusher.com) → Channels
 - `ANTHROPIC_API_KEY` — from [console.anthropic.com](https://console.anthropic.com)
 
@@ -131,11 +131,11 @@ tests/
 - No column reordering UI yet (columns are seeded in a fixed order; the
   `position: Float` field already supports it, just needs a drag handle
   on the column header).
-- No optimistic-update rollback on server action failure — a failed move
+- No optimistic-update rollback on server action failure, a failed move
   is corrected on next realtime event or refresh rather than immediately.
   Acceptable for a project board's low stakes; would need proper rollback
   for something transactional.
-- No workspace invite flow — `WorkspaceMember` rows currently have to be
+- No workspace invite flow `WorkspaceMember` rows currently have to be
   created directly (e.g. via Prisma Studio) since the UI only covers
   workspace creation, not inviting teammates by email.
 
