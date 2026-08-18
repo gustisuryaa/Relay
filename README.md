@@ -15,10 +15,10 @@ a production LLM integration (not just a chat wrapper).
 Most "todo app" portfolio pieces stop at create/read/update/delete. Relay
 adds two things that are genuinely harder to get right:
 
-1. **Real-time multiplayer state** — when User A drags a card, User B's
+1. **Real-time multiplayer state**, when User A drags a card, User B's
    browser needs to reflect that move without a refresh, and without two
    users' simultaneous edits corrupting the board's ordering.
-2. **An LLM feature that's actually useful**, not decorative — the AI
+2. **An LLM feature that's actually useful**, not decorative, the AI
    summary exists because "read the last 20 comments" is a real annoyance
    on any project board with more than a few active users.
 
