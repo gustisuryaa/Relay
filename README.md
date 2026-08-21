@@ -41,7 +41,7 @@ drag-and-drop move to a single row update regardless of column size. See
 
 **Permissions are enforced server-side, not just hidden client-side.**
 Every mutation in `src/server/actions/task.actions.ts` re-checks workspace
-membership before touching the database — the client's UI state is treated
+membership before touching the database, the client's UI state is treated
 as a hint, never as an access grant. See `requireBoardAccess()`.
 
 **Real-time sync** flows through [Pusher Channels](https://pusher.com)
