@@ -1,7 +1,7 @@
 # Relay
 
 A real-time collaborative project board. Drag a task and every teammate's
-screen updates within a few hundred milliseconds — no refresh, no polling.
+screen updates within a few hundred milliseconds, no refresh, no polling.
 Each task also has an on-demand AI summary, generated from its description
 and comment thread, for when a card has accumulated more discussion than
 anyone has time to re-read.
